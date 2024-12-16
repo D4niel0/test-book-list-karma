@@ -47,6 +47,7 @@ describe("Cart component", () => {
     fixture = TestBed.createComponent(CartComponent); // INSTANCIAR
     component = fixture.componentInstance; // INSTANCIAR
     service = fixture.debugElement.injector.get(BookService); // Declarar servicio
+    spyOn(service, "getBooksFromCart").and.callFake(() => listBook); // Evitar que se ejecute la llamada de la función del servicio que hay en el onInit devolviendo nosotros el resultado
     fixture.detectChanges(); // LANZADO POR EL NGONINIT
   });
 
@@ -59,13 +60,6 @@ describe("Cart component", () => {
     expect(totalPrice).toBeGreaterThan(0); // Que sea mayor a 0
     expect(totalPrice).not.toBeNull(); // Que no sea null
   });
-
-  // public onInputNumberChange(action: string, book: Book): void {
-  //   const amount = action === 'plus' ? book.amount + 1 : book.amount - 1;
-  //   book.amount = Number(amount);
-  //   this.listCartBook = this._bookService.updateAmountBook(book);
-  //   this.totalPrice = this.getTotalPrice(this.listCartBook);
-  // }
 
   it("onInputNumberChange increments correctly", () => {
     const action = "plus";
@@ -99,8 +93,8 @@ describe("Cart component", () => {
       amount: 2,
     };
 
-    const spy1 = spyOn(service, "updateAmountBook").and.callFake(() => null); // Espiamos la función updateAmountBook del servicio devolviendo una llamada falsa
-    const spy2 = spyOn(component, "getTotalPrice").and.callFake(() => null); // Espiamos la función getTotalPrice del componente devolviendo una llamada falsa
+    const spy1 = spyOn(service, "updateAmountBook").and.callFake(() => null); // Espiamos la función updateAmountBook del servicio y hacemos una llamada devolviéndola falsa
+    const spy2 = spyOn(component, "getTotalPrice").and.callFake(() => null); // Espiamos la función getTotalPrice del componente y hacemos una llamada devolviéndola falsa
 
     expect(book.amount).toBe(2); // Al inicio el amount de ese libro es 2
 
@@ -110,4 +104,27 @@ describe("Cart component", () => {
 
     expect(spy1).toHaveBeenCalled(); // Comprobar que el método se ha llamado correctamente
   });
+
+  it("onClearBooks works correctly", () => {
+    const spy1 = spyOn(
+      component as any,
+      "_clearListCartBook"
+    ).and.callThrough(); // Espiamos y llamamos al método
+    const spy2 = spyOn(service, "removeBooksFromCart").and.callFake(() => null); // Dentro del método privado se llama al servicio, por lo que debemos devolver una fallamada en null que sea falsa
+
+    component.listCartBook = listBook;
+    component.onClearBooks();
+    expect(component.listCartBook.length).toBe(0);
+    expect(spy1).toHaveBeenCalled();
+    expect(spy2).toHaveBeenCalled();
+  });
+
+  // TEST A MÉTODO PRIVADO DIRECTAMENTE, NO ES CORRECTO, HACERLO DEL PÚBLICO AL PRIVADO
+  // it("_clearListCartBook works correctly", () => {
+  //   const spy1 = spyOn(service, "removeBooksFromCart").and.callFake(() => null); // Dentro del método privado se llama al servicio, por lo que debemos devolver una fallamada en null que sea falsa
+  //   component["_clearListCartBook"](); // Llama a la función privada
+
+  //   expect(component.listCartBook.length).toBe(0);
+  //   expect(spy1).toHaveBeenCalled();
+  // });
 });
